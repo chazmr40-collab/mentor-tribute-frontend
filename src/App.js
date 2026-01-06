@@ -139,6 +139,140 @@ export default function App() {
     setSchedPriority("Routine");
     setSchedStatus("Ready to Schedule");
   };
+// -----------------------------
+// Scheduler Save/Load (localStorage)
+// -----------------------------
+const SCHED_STORAGE_KEY = "mentorLegacy.scheduler.v1";
+
+const getSchedulerSnapshot = () => ({
+  // Step 1
+  schedCallbackName,
+  schedCallbackPhone,
+  schedOrderingProvider,
+
+  schedPatientName,
+  schedDob,
+  schedMrn,
+  schedSex,
+  schedHeight,
+  schedWeight,
+
+  schedAllergies,
+  schedPregnant,
+
+  schedSedation,
+  schedClaustro,
+
+  schedMobility,
+  schedInterpreter,
+  schedLocationPref,
+
+  schedContrastPlanned,
+  schedCreatinineKnown,
+  schedEgfr,
+  schedDiabeticMeds,
+
+  schedMetalRisk,
+  schedImplantType,
+  schedImplantMakeModel,
+  schedImplantCard,
+
+  // Step 2
+  schedModality,
+  schedRegion,
+  selectedSchedulerExam,
+  schedExamText,
+  schedCpt,
+  schedIcd,
+  schedIndication,
+
+  // Step 3 “RIS strip”
+  schedPriority,
+  schedStatus,
+});
+
+function saveSchedulerLocal() {
+  try {
+    const snapshot = getSchedulerSnapshot();
+    localStorage.setItem(SCHED_STORAGE_KEY, JSON.stringify(snapshot));
+    alert("Saved scheduler data (demo) ✅");
+  } catch (err) {
+    console.error(err);
+    alert("Save failed. Browser storage may be blocked.");
+  }
+}
+
+function loadSchedulerLocal() {
+  try {
+    const raw = localStorage.getItem(SCHED_STORAGE_KEY);
+    if (!raw) {
+      alert("No saved scheduler data found yet.");
+      return;
+    }
+
+    const data = JSON.parse(raw);
+
+    // Step 1
+    setSchedCallbackName(data.schedCallbackName ?? "");
+    setSchedCallbackPhone(data.schedCallbackPhone ?? "");
+    setSchedOrderingProvider(data.schedOrderingProvider ?? "");
+
+    setSchedPatientName(data.schedPatientName ?? "");
+    setSchedDob(data.schedDob ?? "");
+    setSchedMrn(data.schedMrn ?? "");
+    setSchedSex(data.schedSex ?? "Unknown");
+    setSchedHeight(data.schedHeight ?? "");
+    setSchedWeight(data.schedWeight ?? "");
+
+    setSchedAllergies(data.schedAllergies ?? "");
+    setSchedPregnant(data.schedPregnant ?? "No");
+
+    setSchedSedation(data.schedSedation ?? "No");
+    setSchedClaustro(data.schedClaustro ?? "No");
+
+    setSchedMobility(data.schedMobility ?? "Ambulatory");
+    setSchedInterpreter(data.schedInterpreter ?? "No");
+    setSchedLocationPref(data.schedLocationPref ?? "");
+
+    setSchedContrastPlanned(data.schedContrastPlanned ?? "Unknown");
+    setSchedCreatinineKnown(data.schedCreatinineKnown ?? "Unknown");
+    setSchedEgfr(data.schedEgfr ?? "");
+    setSchedDiabeticMeds(data.schedDiabeticMeds ?? "No");
+
+    setSchedMetalRisk(data.schedMetalRisk ?? "Unknown");
+    setSchedImplantType(data.schedImplantType ?? "");
+    setSchedImplantMakeModel(data.schedImplantMakeModel ?? "");
+    setSchedImplantCard(data.schedImplantCard ?? "Unknown");
+
+    // Step 2
+    setSchedModality(data.schedModality ?? "MRI");
+    setSchedRegion(data.schedRegion ?? "");
+    setSelectedSchedulerExam(data.selectedSchedulerExam ?? "");
+    setSchedExamText(data.schedExamText ?? "");
+    setSchedCpt(data.schedCpt ?? "");
+    setSchedIcd(data.schedIcd ?? "");
+    setSchedIndication(data.schedIndication ?? "");
+
+    // Step 3 strip
+    setSchedPriority(data.schedPriority ?? "Routine");
+    setSchedStatus(data.schedStatus ?? "Ready to Schedule");
+
+    alert("Loaded scheduler data ✅");
+  } catch (err) {
+    console.error(err);
+    alert("Load failed. Saved data may be corrupted.");
+  }
+}
+
+function clearSchedulerSaved() {
+  try {
+    localStorage.removeItem(SCHED_STORAGE_KEY);
+    alert("Cleared saved scheduler data 🧹");
+  } catch (err) {
+    console.error(err);
+    alert("Clear failed.");
+  }
+}
 
   const fillDemoStep1 = () => {
     setSchedCallbackName("Maria Doe (spouse)");
