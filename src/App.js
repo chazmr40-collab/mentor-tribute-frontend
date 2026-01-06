@@ -732,6 +732,17 @@ function clearSchedulerSaved() {
   <button type="button" className="sched-btn ghost" onClick={resetScheduler}>
     Reset Scheduler
   </button>
+<div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+  <button type="button" className="sched-btn" onClick={saveSchedulerLocal}>
+    Save (demo)
+  </button>
+  <button type="button" className="sched-btn ghost" onClick={loadSchedulerLocal}>
+    Load (demo)
+  </button>
+  <button type="button" className="sched-btn ghost" onClick={clearSchedulerSaved}>
+    Clear Saved
+  </button>
+</div>
 
   <button type="button" className="sched-btn" onClick={saveSchedulerLocal}>
     Save Case
