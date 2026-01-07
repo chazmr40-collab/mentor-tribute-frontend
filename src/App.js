@@ -443,6 +443,41 @@ function clearSchedulerSaved() {
   }, [mentors]);
 
   // -----------------------------
+  // -----------------------------
+// OPTION A: Suggested exams by region (teaching demo)
+// -----------------------------
+const EXAM_SUGGESTIONS = {
+  Brain: [
+    { name: "MRI Brain w/o", cpt: "70551", hint: "Common for headache, neuro deficits, seizure workup." },
+    { name: "MRI Brain w/ & w/o", cpt: "70553", hint: "Often for tumor, MS, infection, post-op follow-up." },
+    { name: "MRI IAC w/ & w/o", cpt: "70553", hint: "Hearing loss / tinnitus / acoustic neuroma workup." },
+  ],
+  Spine: [
+    { name: "MRI C-Spine w/o", cpt: "72141", hint: "Neck pain, radiculopathy, stenosis." },
+    { name: "MRI T-Spine w/o", cpt: "72146", hint: "Thoracic pain, myelopathy concern." },
+    { name: "MRI L-Spine w/o", cpt: "72148", hint: "Low back pain, sciatica, disc disease." },
+  ],
+  MSK: [
+    { name: "MRI Knee w/o", cpt: "73721", hint: "Meniscus/ligaments, internal derangement." },
+    { name: "MRI Shoulder w/o", cpt: "73221", hint: "Rotator cuff, labrum, impingement." },
+    { name: "MRI Ankle w/o", cpt: "73721", hint: "Tendon/ligament injury, osteochondral lesion." },
+  ],
+  AbdomenPelvis: [
+    { name: "MRI Abdomen w/ & w/o", cpt: "74183", hint: "Liver lesion characterization, pancreas, mass eval." },
+    { name: "MRI Pelvis w/ & w/o", cpt: "72197", hint: "Pelvic mass, prostate/uterus/rectal staging workup." },
+    { name: "MRCP w/o", cpt: "74181", hint: "Biliary ducts, gallstones, obstruction evaluation." },
+  ],
+  Vascular: [
+    { name: "MRA Head w/o", cpt: "70544", hint: "Aneurysm screening, vascular malformation." },
+    { name: "MRA Neck w/ & w/o", cpt: "70549", hint: "Carotid stenosis, dissection concerns." },
+    { name: "MRA Abdomen w/ & w/o", cpt: "74185", hint: "AAA / renal artery / vascular mapping (site-specific)." },
+  ],
+};
+
+
+
+
+
   // UI
   // -----------------------------
 // Scheduler Save/Load (localStorage demo)
