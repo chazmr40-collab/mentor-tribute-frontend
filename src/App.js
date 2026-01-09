@@ -140,65 +140,211 @@ export default function App() {
     setSchedStatus("Ready to Schedule");
   };
 // -----------------------------
-// Scheduler Save/Load (localStorage)
-// -----------------------------
+// =============================
+// Scheduler Save/Load (bulletproof)
+// =============================
 const SCHED_STORAGE_KEY = "mentorLegacy.scheduler.v1";
 
-const getSchedulerSnapshot = () => ({
+const DEFAULT_SCHED = {
+  // Step 3 strip
+  schedPriority: "Routine",
+  schedStatus: "Ready to Schedule",
+
+  // Step 1 identifiers / logistics
+  schedCallbackName: "",
+  schedCallbackPhone: "",
+  schedOrderingProvider: "",
+  schedPatientName: "",
+  schedDob: "",
+  schedMrn: "",
+  schedSex: "Unknown",
+  schedHeight: "",
+  schedWeight: "",
+  schedAllergies: "",
+  schedPregnant: "Unknown",
+  schedSedation: "Unknown",
+  schedClaustro: "Unknown",
+  schedMobility: "Ambulatory",
+  schedInterpreter: "No",
+  schedLocationPref: "",
+
+  // Contrast/kidney
+  schedContrastPlanned: "Unknown",
+  schedCreatinineKnown: "Unknown",
+  schedEgfr: "",
+  schedDiabeticMeds: "Unknown",
+
+  // MRI implants/metal
+  schedMetalRisk: "Unknown",
+  schedImplantType: "",
+  schedImplantMakeModel: "",
+  schedImplantCard: "Unknown",
+
+  // Step 2 exam
+  schedModality: "MRI",
+  schedRegion: "",
+  selectedSchedulerExam: "",
+  schedExamText: "",
+  schedCpt: "",
+  schedIcd: "",
+  schedIndication: "",
+};
+
+const oneOf = (val, allowed, fallback) => (allowed.includes(val) ? val : fallback);
+const asText = (val) => (typeof val === "string" ? val : val == null ? "" : String(val));
+
+function sanitizeScheduler(input) {
+  const raw = (input && typeof input === "object") ? input : {};
+
+  // Support both formats:
+  // 1) { v, savedAt, data: {...} }
+  // 2) legacy: { ...fields... }
+  const data = (raw.data && typeof raw.data === "object") ? raw.data : raw;
+
+  const cleaned = { ...DEFAULT_SCHED };
+
+  // Text-ish fields (safe cast to string)
+  const textFields = [
+    "schedCallbackName","schedCallbackPhone","schedOrderingProvider",
+    "schedPatientName","schedDob","schedMrn","schedHeight","schedWeight",
+    "schedAllergies","schedLocationPref","schedEgfr","schedImplantType",
+    "schedImplantMakeModel","schedExamText","schedCpt","schedIcd","schedIndication",
+    "schedStatus"
+  ];
+  textFields.forEach((k) => { cleaned[k] = asText(data[k]); });
+
+  // Controlled selects (force allowed values)
+  cleaned.schedPriority = oneOf(data.schedPriority, ["Routine","Urgent","STAT"], DEFAULT_SCHED.schedPriority);
+  cleaned.schedSex = oneOf(data.schedSex, ["Unknown","Male","Female","X"], DEFAULT_SCHED.schedSex);
+
+  cleaned.schedPregnant = oneOf(data.schedPregnant, ["No","Yes","Unknown","N/A"], DEFAULT_SCHED.schedPregnant);
+  cleaned.schedSedation = oneOf(data.schedSedation, ["No","Yes","Unknown"], DEFAULT_SCHED.schedSedation);
+  cleaned.schedClaustro = oneOf(data.schedClaustro, ["No","Yes","Unknown"], DEFAULT_SCHED.schedClaustro);
+
+  cleaned.schedMobility = oneOf(
+    data.schedMobility,
+    ["Ambulatory","Wheelchair","Stretcher","Needs assist"],
+    DEFAULT_SCHED.schedMobility
+  );
+  cleaned.schedInterpreter = oneOf(data.schedInterpreter, ["No","Yes"], DEFAULT_SCHED.schedInterpreter);
+
+  cleaned.schedContrastPlanned = oneOf(data.schedContrastPlanned, ["Unknown","No","Yes"], DEFAULT_SCHED.schedContrastPlanned);
+  cleaned.schedCreatinineKnown = oneOf(data.schedCreatinineKnown, ["Unknown","No","Yes"], DEFAULT_SCHED.schedCreatinineKnown);
+  cleaned.schedDiabeticMeds = oneOf(data.schedDiabeticMeds, ["No","Yes","Unknown"], DEFAULT_SCHED.schedDiabeticMeds);
+
+  cleaned.schedMetalRisk = oneOf(data.schedMetalRisk, ["Unknown","No","Yes"], DEFAULT_SCHED.schedMetalRisk);
+  cleaned.schedImplantCard = oneOf(data.schedImplantCard, ["Unknown","No","Yes"], DEFAULT_SCHED.schedImplantCard);
+
+  cleaned.schedModality = oneOf(data.schedModality, ["MRI","CT","XRAY","US"], DEFAULT_SCHED.schedModality);
+  cleaned.schedRegion = oneOf(data.schedRegion, ["","Brain","Spine","MSK","AbdomenPelvis","Vascular"], DEFAULT_SCHED.schedRegion);
+
+  // Selected suggestion is fine as text
+  cleaned.selectedSchedulerExam = asText(data.selectedSchedulerExam);
+
+  return cleaned;
+}
+
+function getSchedulerSnapshot() {
+  return {
+    schedPriority,
+    schedStatus,
+
+    schedCallbackName,
+    schedCallbackPhone,
+    schedOrderingProvider,
+    schedPatientName,
+    schedDob,
+    schedMrn,
+    schedSex,
+    schedHeight,
+    schedWeight,
+    schedAllergies,
+    schedPregnant,
+    schedSedation,
+    schedClaustro,
+    schedMobility,
+    schedInterpreter,
+    schedLocationPref,
+
+    schedContrastPlanned,
+    schedCreatinineKnown,
+    schedEgfr,
+    schedDiabeticMeds,
+
+    schedMetalRisk,
+    schedImplantType,
+    schedImplantMakeModel,
+    schedImplantCard,
+
+    schedModality,
+    schedRegion,
+    selectedSchedulerExam,
+    schedExamText,
+    schedCpt,
+    schedIcd,
+    schedIndication,
+  };
+}
+
+function applySchedulerSnapshot(cleaned) {
+  // Step 3
+  setSchedPriority(cleaned.schedPriority);
+  setSchedStatus(cleaned.schedStatus);
+
   // Step 1
-  schedCallbackName,
-  schedCallbackPhone,
-  schedOrderingProvider,
+  setSchedCallbackName(cleaned.schedCallbackName);
+  setSchedCallbackPhone(cleaned.schedCallbackPhone);
+  setSchedOrderingProvider(cleaned.schedOrderingProvider);
+  setSchedPatientName(cleaned.schedPatientName);
+  setSchedDob(cleaned.schedDob);
+  setSchedMrn(cleaned.schedMrn);
+  setSchedSex(cleaned.schedSex);
+  setSchedHeight(cleaned.schedHeight);
+  setSchedWeight(cleaned.schedWeight);
+  setSchedAllergies(cleaned.schedAllergies);
+  setSchedPregnant(cleaned.schedPregnant);
+  setSchedSedation(cleaned.schedSedation);
+  setSchedClaustro(cleaned.schedClaustro);
+  setSchedMobility(cleaned.schedMobility);
+  setSchedInterpreter(cleaned.schedInterpreter);
+  setSchedLocationPref(cleaned.schedLocationPref);
 
-  schedPatientName,
-  schedDob,
-  schedMrn,
-  schedSex,
-  schedHeight,
-  schedWeight,
+  // Contrast/kidney
+  setSchedContrastPlanned(cleaned.schedContrastPlanned);
+  setSchedCreatinineKnown(cleaned.schedCreatinineKnown);
+  setSchedEgfr(cleaned.schedEgfr);
+  setSchedDiabeticMeds(cleaned.schedDiabeticMeds);
 
-  schedAllergies,
-  schedPregnant,
-
-  schedSedation,
-  schedClaustro,
-
-  schedMobility,
-  schedInterpreter,
-  schedLocationPref,
-
-  schedContrastPlanned,
-  schedCreatinineKnown,
-  schedEgfr,
-  schedDiabeticMeds,
-
-  schedMetalRisk,
-  schedImplantType,
-  schedImplantMakeModel,
-  schedImplantCard,
+  // Metal/implant
+  setSchedMetalRisk(cleaned.schedMetalRisk);
+  setSchedImplantType(cleaned.schedImplantType);
+  setSchedImplantMakeModel(cleaned.schedImplantMakeModel);
+  setSchedImplantCard(cleaned.schedImplantCard);
 
   // Step 2
-  schedModality,
-  schedRegion,
-  selectedSchedulerExam,
-  schedExamText,
-  schedCpt,
-  schedIcd,
-  schedIndication,
+  setSchedModality(cleaned.schedModality);
+  setSchedRegion(cleaned.schedRegion);
+  setSelectedSchedulerExam(cleaned.selectedSchedulerExam);
+  setSchedExamText(cleaned.schedExamText);
+  setSchedCpt(cleaned.schedCpt);
+  setSchedIcd(cleaned.schedIcd);
+  setSchedIndication(cleaned.schedIndication);
+}
 
-  // Step 3 “RIS strip”
-  schedPriority,
-  schedStatus,
-});
-
+// Replace your existing versions with these:
 function saveSchedulerLocal() {
   try {
     const snapshot = getSchedulerSnapshot();
-    localStorage.setItem(SCHED_STORAGE_KEY, JSON.stringify(snapshot));
-    alert("Saved scheduler data (demo) ✅");
-  } catch (err) {
-    console.error(err);
-    alert("Save failed. Browser storage may be blocked.");
+    const payload = {
+      v: 1,
+      savedAt: new Date().toISOString(),
+      data: snapshot,
+    };
+    localStorage.setItem(SCHED_STORAGE_KEY, JSON.stringify(payload));
+    alert("Saved scheduler locally.");
+  } catch (e) {
+    console.error(e);
+    alert("Save failed. Your browser may be blocking storage.");
   }
 }
 
@@ -206,60 +352,19 @@ function loadSchedulerLocal() {
   try {
     const raw = localStorage.getItem(SCHED_STORAGE_KEY);
     if (!raw) {
-      alert("No saved scheduler data found yet.");
+      alert("No saved scheduler found yet.");
       return;
     }
+    const parsed = JSON.parse(raw);
+    const cleaned = sanitizeScheduler(parsed);
+    applySchedulerSnapshot(cleaned);
 
-    const data = JSON.parse(raw);
+    // optional: jump user to step 1 after load
+    // setSchedulerStep(1);
 
-    // Step 1
-    setSchedCallbackName(data.schedCallbackName ?? "");
-    setSchedCallbackPhone(data.schedCallbackPhone ?? "");
-    setSchedOrderingProvider(data.schedOrderingProvider ?? "");
-
-    setSchedPatientName(data.schedPatientName ?? "");
-    setSchedDob(data.schedDob ?? "");
-    setSchedMrn(data.schedMrn ?? "");
-    setSchedSex(data.schedSex ?? "Unknown");
-    setSchedHeight(data.schedHeight ?? "");
-    setSchedWeight(data.schedWeight ?? "");
-
-    setSchedAllergies(data.schedAllergies ?? "");
-    setSchedPregnant(data.schedPregnant ?? "No");
-
-    setSchedSedation(data.schedSedation ?? "No");
-    setSchedClaustro(data.schedClaustro ?? "No");
-
-    setSchedMobility(data.schedMobility ?? "Ambulatory");
-    setSchedInterpreter(data.schedInterpreter ?? "No");
-    setSchedLocationPref(data.schedLocationPref ?? "");
-
-    setSchedContrastPlanned(data.schedContrastPlanned ?? "Unknown");
-    setSchedCreatinineKnown(data.schedCreatinineKnown ?? "Unknown");
-    setSchedEgfr(data.schedEgfr ?? "");
-    setSchedDiabeticMeds(data.schedDiabeticMeds ?? "No");
-
-    setSchedMetalRisk(data.schedMetalRisk ?? "Unknown");
-    setSchedImplantType(data.schedImplantType ?? "");
-    setSchedImplantMakeModel(data.schedImplantMakeModel ?? "");
-    setSchedImplantCard(data.schedImplantCard ?? "Unknown");
-
-    // Step 2
-    setSchedModality(data.schedModality ?? "MRI");
-    setSchedRegion(data.schedRegion ?? "");
-    setSelectedSchedulerExam(data.selectedSchedulerExam ?? "");
-    setSchedExamText(data.schedExamText ?? "");
-    setSchedCpt(data.schedCpt ?? "");
-    setSchedIcd(data.schedIcd ?? "");
-    setSchedIndication(data.schedIndication ?? "");
-
-    // Step 3 strip
-    setSchedPriority(data.schedPriority ?? "Routine");
-    setSchedStatus(data.schedStatus ?? "Ready to Schedule");
-
-    alert("Loaded scheduler data ✅");
-  } catch (err) {
-    console.error(err);
+    alert("Loaded saved scheduler.");
+  } catch (e) {
+    console.error(e);
     alert("Load failed. Saved data may be corrupted.");
   }
 }
@@ -267,12 +372,13 @@ function loadSchedulerLocal() {
 function clearSchedulerSaved() {
   try {
     localStorage.removeItem(SCHED_STORAGE_KEY);
-    alert("Cleared saved scheduler data 🧹");
-  } catch (err) {
-    console.error(err);
+    alert("Cleared saved scheduler.");
+  } catch (e) {
+    console.error(e);
     alert("Clear failed.");
   }
 }
+
 
   const fillDemoStep1 = () => {
     setSchedCallbackName("Maria Doe (spouse)");
@@ -475,138 +581,11 @@ const EXAM_SUGGESTIONS = {
 };
 
 
-
-
-
   // UI
   // -----------------------------
 // Scheduler Save/Load (localStorage demo)
 // -----------------------------
 const SCHED_KEY = "mentor_legacy_scheduler_v1";
-
-function saveSchedulerLocal() {
-  try {
-    const payload = {
-      schedulerStep,
-
-      // Step 1
-      schedCallbackName,
-      schedCallbackPhone,
-      schedOrderingProvider,
-      schedPatientName,
-      schedDob,
-      schedMrn,
-      schedSex,
-      schedHeight,
-      schedWeight,
-      schedAllergies,
-      schedPregnant,
-      schedSedation,
-      schedClaustro,
-      schedMobility,
-      schedInterpreter,
-      schedLocationPref,
-
-      // Contrast/Kidney
-      schedContrastPlanned,
-      schedCreatinineKnown,
-      schedEgfr,
-      schedDiabeticMeds,
-
-      // Implants/Metal
-      schedMetalRisk,
-      schedImplantType,
-      schedImplantMakeModel,
-      schedImplantCard,
-
-      // Step 2
-      schedModality,
-      schedRegion,
-      selectedSchedulerExam,
-      schedExamText,
-      schedCpt,
-      schedIcd,
-      schedIndication,
-
-      // Step 3 “status strip”
-      schedPriority,
-      schedStatus,
-    };
-
-    localStorage.setItem(SCHED_KEY, JSON.stringify(payload));
-    alert("Scheduler saved (demo).");
-  } catch (e) {
-    console.error(e);
-    alert("Save failed.");
-  }
-}
-
-function loadSchedulerLocal() {
-  try {
-    const raw = localStorage.getItem(SCHED_KEY);
-    if (!raw) {
-      alert("No saved scheduler found.");
-      return;
-    }
-    const d = JSON.parse(raw);
-
-    if (typeof d.schedulerStep === "number") setSchedulerStep(d.schedulerStep);
-
-    // Step 1
-    if (d.schedCallbackName != null) setSchedCallbackName(d.schedCallbackName);
-    if (d.schedCallbackPhone != null) setSchedCallbackPhone(d.schedCallbackPhone);
-    if (d.schedOrderingProvider != null) setSchedOrderingProvider(d.schedOrderingProvider);
-    if (d.schedPatientName != null) setSchedPatientName(d.schedPatientName);
-    if (d.schedDob != null) setSchedDob(d.schedDob);
-    if (d.schedMrn != null) setSchedMrn(d.schedMrn);
-    if (d.schedSex != null) setSchedSex(d.schedSex);
-    if (d.schedHeight != null) setSchedHeight(d.schedHeight);
-    if (d.schedWeight != null) setSchedWeight(d.schedWeight);
-    if (d.schedAllergies != null) setSchedAllergies(d.schedAllergies);
-    if (d.schedPregnant != null) setSchedPregnant(d.schedPregnant);
-    if (d.schedSedation != null) setSchedSedation(d.schedSedation);
-    if (d.schedClaustro != null) setSchedClaustro(d.schedClaustro);
-    if (d.schedMobility != null) setSchedMobility(d.schedMobility);
-    if (d.schedInterpreter != null) setSchedInterpreter(d.schedInterpreter);
-    if (d.schedLocationPref != null) setSchedLocationPref(d.schedLocationPref);
-
-    // Contrast/Kidney
-    if (d.schedContrastPlanned != null) setSchedContrastPlanned(d.schedContrastPlanned);
-    if (d.schedCreatinineKnown != null) setSchedCreatinineKnown(d.schedCreatinineKnown);
-    if (d.schedSchedEgfr != null) setSchedEgfr(d.schedSchedEgfr); // (ignore if you don't have this key)
-    if (d.schedEgfr != null) setSchedEgfr(d.schedEgfr);
-    if (d.schedDiabeticMeds != null) setSchedDiabeticMeds(d.schedDiabeticMeds);
-
-    // Implants/Metal
-    if (d.schedMetalRisk != null) setSchedMetalRisk(d.schedMetalRisk);
-    if (d.schedImplantType != null) setSchedImplantType(d.schedImplantType);
-    if (d.schedImplantMakeModel != null) setSchedImplantMakeModel(d.schedImplantMakeModel);
-    if (d.schedImplantCard != null) setSchedImplantCard(d.schedImplantCard);
-
-    // Step 2
-    if (d.schedModality != null) setSchedModality(d.schedModality);
-    if (d.schedRegion != null) setSchedRegion(d.schedRegion);
-    if (d.selectedSchedulerExam != null) setSelectedSchedulerExam(d.selectedSchedulerExam);
-    if (d.schedExamText != null) setSchedExamText(d.schedExamText);
-    if (d.schedCpt != null) setSchedCpt(d.schedCpt);
-    if (d.schedIcd != null) setSchedIcd(d.schedIcd);
-    if (d.schedIndication != null) setSchedIndication(d.schedIndication);
-
-    // Step 3
-    if (d.schedPriority != null) setSchedPriority(d.schedPriority);
-    if (d.schedStatus != null) setSchedStatus(d.schedStatus);
-
-    alert("Scheduler loaded (demo).");
-  } catch (e) {
-    console.error(e);
-    alert("Load failed.");
-  }
-}
-
-function clearSchedulerSaved() {
-  localStorage.removeItem(SCHED_KEY);
-  alert("Saved scheduler cleared.");
-}
 
   // -----------------------------
   return (
@@ -779,9 +758,6 @@ function clearSchedulerSaved() {
   </button>
 </div>
 
-  <button type="button" className="sched-btn" onClick={saveSchedulerLocal}>
-    Save Case
-  </button>
 
   <button type="button" className="sched-btn ghost" onClick={loadSchedulerLocal}>
     Load Case
