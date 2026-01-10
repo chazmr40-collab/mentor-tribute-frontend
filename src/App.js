@@ -49,6 +49,7 @@ export default function App() {
   // Scheduler (Wizard)
   // -----------------------------
   const [schedulerStep, setSchedulerStep] = useState(1);
+  const [schedLastSaved, setSchedLastSaved] = useState("");
 
   // Step 1 — Patient & Safety
   const [schedCallbackName, setSchedCallbackName] = useState("");
@@ -341,9 +342,12 @@ function saveSchedulerLocal() {
       data: snapshot,
     };
     localStorage.setItem(SCHED_STORAGE_KEY, JSON.stringify(payload));
+    setSchedLastSaved(payload.savedAt);
+
     alert("Saved scheduler locally.");
   } catch (e) {
     console.error(e);
+
     alert("Save failed. Your browser may be blocking storage.");
   }
 }
@@ -378,6 +382,7 @@ function clearSchedulerSaved() {
     alert("Clear failed.");
   }
 }
+
 
 
   const fillDemoStep1 = () => {
@@ -585,7 +590,18 @@ const EXAM_SUGGESTIONS = {
   // -----------------------------
 // Scheduler Save/Load (localStorage demo)
 // -----------------------------
-const SCHED_KEY = "mentor_legacy_scheduler_v1";
+
+const SCHED_VERSION = 1;
+
+
+
+function nowIso() {
+  return new Date().toISOString();
+}
+
+function safeJsonParse(s) {
+  try { return JSON.parse(s); } catch { return null; }
+}
 
   // -----------------------------
   return (
@@ -750,6 +766,8 @@ const SCHED_KEY = "mentor_legacy_scheduler_v1";
   <button type="button" className="sched-btn" onClick={saveSchedulerLocal}>
     Save (demo)
   </button>
+
+
   <button type="button" className="sched-btn ghost" onClick={loadSchedulerLocal}>
     Load (demo)
   </button>
@@ -763,9 +781,7 @@ const SCHED_KEY = "mentor_legacy_scheduler_v1";
     Load Case
   </button>
 
-  <button type="button" className="sched-btn ghost" onClick={clearSchedulerSaved}>
-    Clear Saved
-  </button>
+  
 </div>
 
 
