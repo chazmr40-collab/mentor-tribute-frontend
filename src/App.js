@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 export default function App() {
   // -----------------------------
@@ -50,6 +50,13 @@ export default function App() {
   // -----------------------------
   const [schedulerStep, setSchedulerStep] = useState(1);
   const [schedLastSaved, setSchedLastSaved] = useState("");
+
+ useEffect(() => {
+  const parsed = safeJsonParse(localStorage.getItem(SCHED_STORAGE_KEY));
+  setSchedLastSaved(parsed?.savedAt || "");
+}, []);
+ 
+
 
   // Step 1 — Patient & Safety
   const [schedCallbackName, setSchedCallbackName] = useState("");
@@ -337,20 +344,19 @@ function saveSchedulerLocal() {
   try {
     const snapshot = getSchedulerSnapshot();
     const payload = {
-      v: 1,
-      savedAt: new Date().toISOString(),
+      v: SCHED_VERSION,
+      savedAt: nowIso(),
       data: snapshot,
     };
     localStorage.setItem(SCHED_STORAGE_KEY, JSON.stringify(payload));
     setSchedLastSaved(payload.savedAt);
-
     alert("Saved scheduler locally.");
   } catch (e) {
     console.error(e);
-
     alert("Save failed. Your browser may be blocking storage.");
   }
 }
+
 
 function loadSchedulerLocal() {
   try {
@@ -466,12 +472,79 @@ function clearSchedulerSaved() {
     return { level: "ok", message: "Looks good — you have enough to generate the RIS note." };
   }, [schedExamText, schedIndication]);
 
+ function getTeachingSuggestedCorrection() {
+  // Only possible if Region exists and we have suggestions
+  if (!schedRegion) return null;
+
+  const list = (EXAM_SUGGESTIONS && EXAM_SUGGESTIONS[schedRegion]) ? EXAM_SUGGESTIONS[schedRegion] : [];
+  if (!list.length) return null;
+
+  // If user selected one, use it; otherwise auto-pick first suggestion
+  const chosen =
+    (selectedSchedulerExam && list.find((x) => x.name === selectedSchedulerExam)) || list[0];
+
+  const reasons = [];
+
+  // Use your existing banner message if available
+  if (dxExamStatus?.message) {
+    reasons.push(dxExamStatus.message);
+  }
+
+  if (schedIndication?.trim()) {
+    reasons.push(`Indication captured: ${schedIndication.trim()}`);
+  }
+
+  const typedExam = (schedExamText || "").trim();
+  if (typedExam && typedExam !== chosen.name.trim()) {
+    reasons.push(`Caller/Order text was "${typedExam}" — suggestion standardizes to "${chosen.name}" for consistency.`);
+  }
+
+  const typedCpt = (schedCpt || "").toString().trim();
+  if (chosen.cpt && typedCpt && typedCpt !== String(chosen.cpt)) {
+    reasons.push(`Entered CPT (${typedCpt}) doesn’t match suggested CPT (${chosen.cpt}).`);
+  }
+
+  const typedIcd = (schedIcd || "").toString().trim();
+  if (chosen.icd && typedIcd && typedIcd !== String(chosen.icd)) {
+    reasons.push(`Entered ICD-10 (${typedIcd}) doesn’t match suggested ICD-10 (${chosen.icd}).`);
+  }
+
+  // If we still have nothing, add a generic explanation
+  if (reasons.length === 0) {
+    reasons.push("Suggestion is based on selected Body Region + standard naming to reduce scheduling errors.");
+  }
+
+  return { chosen, reasons, autoPicked: !selectedSchedulerExam };
+}
+
+  
+
   // -----------------------------
   // RIS Note Text Builder
   // -----------------------------
   const buildOrderSummaryText = () => {
     const lines = [];
+// --- Teaching Suggested Correction (for RIS note) ---
+  const corr = getTeachingSuggestedCorrection();
 
+  
+  lines.push("=== TEACHING: SUGGESTED CORRECTION (NOT MEDICAL ADVICE) ===");
+
+  if (!corr) {
+    lines.push("No suggested correction generated (Body Region not selected or no suggestions available).");
+  } else {
+    const { chosen, reasons, autoPicked } = corr;
+
+    lines.push(`Suggested standardized exam: ${chosen.name}${autoPicked ? " (auto-suggested)" : ""}`);
+    if (chosen.cpt) lines.push(`Suggested CPT: ${chosen.cpt}`);
+    if (chosen.icd) lines.push(`Suggested ICD-10: ${chosen.icd}`);
+
+    lines.push("Explanation:");
+    reasons.forEach((r) => lines.push(`- ${r}`));
+
+    lines.push("Action:");
+    lines.push("- Verify with ordering provider / protocol team if anything is unclear before final scheduling.");
+  }
     lines.push("=== RIS NOTE (Training Demo) ===");
     lines.push(`Generated: ${new Date().toLocaleString()}`);
     lines.push("");
@@ -753,6 +826,11 @@ function safeJsonParse(s) {
             A teaching-focused pre-clearance form to help schedulers capture clean, complete ordering info.
             <strong> (Teaching only — not medical advice.)</strong>
           </p>
+{schedLastSaved && (
+  <div className="small-note" style={{ marginTop: 10 }}>
+    Last saved: <strong>{new Date(schedLastSaved).toLocaleString()}</strong>
+  </div>
+)}
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
   <button type="button" className="sched-btn" onClick={fillDemoStep1}>
