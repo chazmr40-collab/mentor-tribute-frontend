@@ -534,13 +534,12 @@ function loadDemoCase() {
 
   
  const step1Ok = useMemo(() => {
-  return (
+  const basicOk =
     schedPatientName.trim().length > 0 &&
-    schedDob.trim().length > 0 &&
-    demoNameOk
-  );
-}, [schedPatientName, schedDob, demoNameOk]);
+    schedDob.trim().length > 0;
 
+  return basicOk && demoNameOk;
+}, [schedPatientName, schedDob, demoNameOk]);
 
 
   const step2Ok = useMemo(() => {
