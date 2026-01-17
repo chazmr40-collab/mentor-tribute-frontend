@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+
 
 export default function App() {
   // -----------------------------
@@ -50,13 +51,28 @@ export default function App() {
   // -----------------------------
   const [schedulerStep, setSchedulerStep] = useState(1);
   const [schedLastSaved, setSchedLastSaved] = useState("");
+  // Demo mode (privacy): block real names
+const [demoOnly, setDemoOnly] = useState(true);
 
- useEffect(() => {
-  const parsed = safeJsonParse(localStorage.getItem(SCHED_STORAGE_KEY));
-  setSchedLastSaved(parsed?.savedAt || "");
+// Used to auto-scroll the scheduler to top when switching steps
+const schedulerTopRef = useRef(null);
+
+// Auto-scroll when moving between steps (fixes Step 2 opening mid-page)
+useEffect(() => {
+  if (!schedulerTopRef.current) return;
+  schedulerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+}, [schedulerStep]);
+
+useEffect(() => {
+  try {
+    const raw = localStorage.getItem(SCHED_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    setSchedLastSaved(parsed?.savedAt || "");
+  } catch {
+    // ignore
+  }
 }, []);
- 
-
 
   // Step 1 — Patient & Safety
   const [schedCallbackName, setSchedCallbackName] = useState("");
@@ -64,9 +80,18 @@ export default function App() {
   const [schedOrderingProvider, setSchedOrderingProvider] = useState("");
 
   const [schedPatientName, setSchedPatientName] = useState("");
+// Used to auto-scroll the scheduler to top when switching steps
+
+  // Demo mode rule: patient name must start with DEMO or TEST
+
   const [schedDob, setSchedDob] = useState("");
   const [schedMrn, setSchedMrn] = useState("");
   const [schedSex, setSchedSex] = useState("Unknown");
+ 
+  const demoNameOk = useMemo(() => {
+  if (!demoOnly) return true;
+  return /^(demo|test)\b/i.test((schedPatientName || "").trim());
+  }, [demoOnly, schedPatientName]);
 
   const [schedHeight, setSchedHeight] = useState("");
   const [schedWeight, setSchedWeight] = useState("");
@@ -365,7 +390,12 @@ function loadSchedulerLocal() {
       alert("No saved scheduler found yet.");
       return;
     }
-    const parsed = JSON.parse(raw);
+    const parsed = safeJsonParse(raw);
+if (!parsed) {
+  alert("Saved scheduler data is corrupted or unreadable.");
+  return;
+}
+
     const cleaned = sanitizeScheduler(parsed);
     applySchedulerSnapshot(cleaned);
 
@@ -389,6 +419,55 @@ function clearSchedulerSaved() {
   }
 }
 
+function loadDemoCase() {
+  // Always reset to Step 1 for clean demo
+  setSchedulerStep(1);
+
+  // Step 1 (fake data only)
+  setSchedCallbackName("DEMO Caller (Training)");
+  setSchedCallbackPhone("401-555-0199");
+  setSchedOrderingProvider("TEST Provider, MD");
+  setSchedPatientName("DEMO PATIENT, ALEX");
+  setSchedDob("01/01/2000");
+  setSchedMrn("DEMO-10001");
+  setSchedSex("Unknown");
+  setSchedHeight(`5'10"`);
+  setSchedWeight("180 lb");
+  setSchedAllergies("None reported (demo)");
+  setSchedPregnant("N/A");
+  setSchedSedation("No");
+  setSchedClaustro("No");
+  setSchedMobility("Ambulatory");
+  setSchedInterpreter("No");
+  setSchedLocationPref("Morning preferred (demo)");
+
+  // Contrast/Kidney (demo)
+  setSchedContrastPlanned("Unknown");
+  setSchedCreatinineKnown("Unknown");
+  setSchedEgfr("");
+  setSchedDiabeticMeds("Unknown");
+
+  // Implants/Metal (demo)
+  setSchedMetalRisk("Unknown");
+  setSchedImplantType("");
+  setSchedImplantMakeModel("");
+  setSchedImplantCard("Unknown");
+
+  // Step 2 (demo)
+  setSchedModality("MRI");
+  setSchedRegion("Spine");
+  setSelectedSchedulerExam("");
+  setSchedExamText("MRI C-Spine w/o (demo)");
+  setSchedCpt("");
+  setSchedIcd("");
+  setSchedIndication("Neck pain with radicular symptoms (demo)");
+
+  // Step 3 status strip (demo)
+  setSchedPriority("Routine");
+  setSchedStatus("Ready to Schedule (demo)");
+
+  alert("Demo case loaded (no real patient data).");
+}
 
 
   const fillDemoStep1 = () => {
@@ -453,10 +532,16 @@ function clearSchedulerSaved() {
     setSchedCpt(chosen.cpt || "");
   };
 
-  const step1Ok = useMemo(() => {
-    // keep it simple so you can move forward
-    return Boolean(schedPatientName.trim()) && Boolean(schedDob.trim());
-  }, [schedPatientName, schedDob]);
+  
+ const step1Ok = useMemo(() => {
+  return (
+    schedPatientName.trim().length > 0 &&
+    schedDob.trim().length > 0 &&
+    demoNameOk
+  );
+}, [schedPatientName, schedDob, demoNameOk]);
+
+
 
   const step2Ok = useMemo(() => {
     return Boolean(schedExamText.trim());
@@ -723,6 +808,23 @@ function safeJsonParse(s) {
 
       {/* MENTORS */}
       <section className="info-section" id="mentors">
+      <div className="small-note" style={{ marginTop: 10 }}>
+  <label style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+    <input
+      type="checkbox"
+      checked={demoOnly}
+      onChange={(e) => setDemoOnly(e.target.checked)}
+    />
+    Demo Mode (blocks real names — use DEMO/TEST)
+  </label>
+</div>
+
+{demoOnly && !demoNameOk && (
+  <div className="small-note" style={{ marginTop: 10 }}>
+    ⚠ Demo Mode is ON: Patient Name must start with <strong>DEMO</strong> or <strong>TEST</strong>.
+  </div>
+)}
+
         <div className="info-inner">
           <h2 className="info-title">Mentor Tribute</h2>
           <p className="info-text">Fill in three mentors and keep the language heartfelt and specific.</p>
@@ -743,6 +845,10 @@ function safeJsonParse(s) {
             <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
               <button type="button" className="sched-btn" onClick={saveMentorsLocal}>Save (demo)</button>
               <button type="button" className="sched-btn ghost" onClick={loadMentorsLocal}>Load (demo)</button>
+              <button type="button" className="sched-btn ghost" onClick={loadDemoCase}>
+  Load Demo Case
+</button>
+
             </div>
           </div>
 
@@ -819,7 +925,8 @@ function safeJsonParse(s) {
       </section>
 
       {/* SCHEDULER */}
-      <section className="info-section" id="scheduler">
+     <section className="info-section" id="scheduler" ref={schedulerTopRef}>
+
         <div className="info-inner">
           <h2 className="info-title">Radiology Schedulers Helper</h2>
           <p className="info-text">
