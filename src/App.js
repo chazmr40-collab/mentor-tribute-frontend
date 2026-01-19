@@ -56,12 +56,24 @@ const [demoOnly, setDemoOnly] = useState(true);
 
 // Used to auto-scroll the scheduler to top when switching steps
 const schedulerTopRef = useRef(null);
-
-// Auto-scroll when moving between steps (fixes Step 2 opening mid-page)
+// Used to auto-focus the first input in Step 2
+const step2FirstFieldRef = useRef(null)
 useEffect(() => {
   if (!schedulerTopRef.current) return;
+
+  // Scroll scheduler header into view
   schedulerTopRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+
+  // If Step 2, focus the first field after the scroll/layout settles
+  if (schedulerStep === 2) {
+    const t = setTimeout(() => {
+      step2FirstFieldRef.current?.focus();
+    }, 150);
+
+    return () => clearTimeout(t);
+  }
 }, [schedulerStep]);
+
 
 useEffect(() => {
   try {
@@ -946,7 +958,7 @@ function safeJsonParse(s) {
     Last saved: <strong>{new Date(schedLastSaved).toLocaleString()}</strong>
   </div>
 )}
-
+ {/* buttons row */}
  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
   <button type="button" className="sched-btn" onClick={fillDemoStep1}>
     Demo Fill Step 1 →
@@ -1526,6 +1538,14 @@ function safeJsonParse(s) {
                 <div className="sched-row">
                   <div className="sched-label">
                     <div className="sched-label-title">Requested Exam (Plain Language)</div>
+                    <input
+                     ref={step2FirstFieldRef}
+                      className="sched-input"
+                      value={schedExamText}
+                      onChange={(e) => setSchedExamText(e.target.value)}
+                      placeholder="e.g., MRI Brain w/ & w/o"
+                    />
+
                     <div className="sched-label-hint">What the caller thinks they’re booking</div>
                   </div>
                   <div className="sched-control">
