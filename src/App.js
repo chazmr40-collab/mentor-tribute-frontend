@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+// Deployed: 2026-01-19 (manual Netlify)
 
 
 export default function App() {
