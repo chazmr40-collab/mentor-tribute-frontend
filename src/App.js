@@ -805,25 +805,9 @@ function safeJsonParse(s) {
         </div>
       </section>
 
-      {/* MENTORS */}
-      <section className="info-section" id="mentors">
-      <div className="small-note" style={{ marginTop: 10 }}>
-  <label style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
-    <input
-      type="checkbox"
-      checked={demoOnly}
-      onChange={(e) => setDemoOnly(e.target.checked)}
-    />
-    Demo Mode (blocks real names — use DEMO/TEST)
-  </label>
-</div>
+      
 
-{demoOnly && !demoNameOk && (
-  <div className="small-note" style={{ marginTop: 10 }}>
-    ⚠ Demo Mode is ON: Patient Name must start with <strong>DEMO</strong> or <strong>TEST</strong>.
-  </div>
-)}
-
+    <section className="info-section" id="mentors">
         <div className="info-inner">
           <h2 className="info-title">Mentor Tribute</h2>
           <p className="info-text">Fill in three mentors and keep the language heartfelt and specific.</p>
@@ -932,41 +916,63 @@ function safeJsonParse(s) {
             A teaching-focused pre-clearance form to help schedulers capture clean, complete ordering info.
             <strong> (Teaching only — not medical advice.)</strong>
           </p>
+          {/* Demo Mode (privacy) */}
+<div className="small-note" style={{ marginTop: 10 }}>
+  <label style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+    <input
+      type="checkbox"
+      checked={demoOnly}
+      onChange={(e) => setDemoOnly(e.target.checked)}
+    />
+    Demo Mode (blocks real names — use DEMO/TEST)
+  </label>
+</div>
+
+{demoOnly && !demoNameOk && (
+  <div className="small-note" style={{ marginTop: 10 }}>
+    ⚠ Demo Mode is ON: Patient Name must start with <strong>DEMO</strong> or{" "}
+    <strong>TEST</strong>.
+  </div>
+)}
+
+        
+     
+   
+  
+
+   
 {schedLastSaved && (
   <div className="small-note" style={{ marginTop: 10 }}>
     Last saved: <strong>{new Date(schedLastSaved).toLocaleString()}</strong>
   </div>
 )}
 
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+ <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
   <button type="button" className="sched-btn" onClick={fillDemoStep1}>
     Demo Fill Step 1 →
+  </button>
+
+  <button type="button" className="sched-btn ghost" onClick={loadDemoCase}>
+    Load Demo Case
   </button>
 
   <button type="button" className="sched-btn ghost" onClick={resetScheduler}>
     Reset Scheduler
   </button>
-<div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+
   <button type="button" className="sched-btn" onClick={saveSchedulerLocal}>
     Save (demo)
   </button>
 
-
   <button type="button" className="sched-btn ghost" onClick={loadSchedulerLocal}>
     Load (demo)
   </button>
+
   <button type="button" className="sched-btn ghost" onClick={clearSchedulerSaved}>
     Clear Saved
   </button>
 </div>
 
-
-  <button type="button" className="sched-btn ghost" onClick={loadSchedulerLocal}>
-    Load Case
-  </button>
-
-  
-</div>
 
 
           {/* Wizard Step Tabs */}
