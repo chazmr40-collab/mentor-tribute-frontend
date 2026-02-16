@@ -1,0 +1,30 @@
+﻿[
+  {
+    "id": "m1",
+    "name": "Dr. Ana Martinez",
+    "role": "Radiologist",
+    "organization": "Rhode Island Hospital",
+    "years": "1989–1995",
+    "quote": "Taught me to question assumptions and protect patients first.",
+    "photo": "https://picsum.photos/seed/ana/300/300"
+  },
+  {
+    "id": "m2",
+    "name": "Samuel Greene",
+    "role": "MRI Director",
+    "organization": "Kent Hospital",
+    "years": "1996–2004",
+    "quote": "Leadership is service. Lift your team and the work will shine.",
+    "photo": "https://picsum.photos/seed/greene/300/300"
+  },
+  {
+    "id": "m3",
+    "name": "Patricia O’Neil",
+    "role": "Senior MRI Technologist",
+    "organization": "Fatima Hospital",
+    "years": "2005–2012",
+    "quote": "Safety is a habit built one checklist at a time.",
+    "photo": "https://picsum.photos/seed/oneil/300/300"
+  }
+]
+
