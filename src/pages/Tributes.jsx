@@ -1,3 +1,4 @@
+// src/pages/Tributes.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import sample from "../data/mentors.sample.json";
@@ -23,14 +24,12 @@ export default function Tributes() {
   function onSubmit(e) {
     e.preventDefault();
 
-    // very light validation
     if (!form.name || !form.role || !form.organization) {
       alert("Please fill name, role, and organization.");
       return;
     }
 
-    const id =
-      (crypto && crypto.randomUUID && crypto.randomUUID()) || "m" + Date.now();
+    const id = crypto?.randomUUID?.() || "m" + Date.now();
 
     addItem(
       {
@@ -47,13 +46,14 @@ export default function Tributes() {
       sample
     );
 
-    // go back to Home to see it
+    // ✅ This is why it feels like a “reset” — it navigates Home after saving
     navigate("/");
   }
 
   return (
     <main style={{ padding: 16, maxWidth: 640 }}>
       <h1>Add a Tribute</h1>
+
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
         <label>
           Name *
@@ -67,12 +67,7 @@ export default function Tributes() {
 
         <label>
           Organization *
-          <input
-            name="organization"
-            value={form.organization}
-            onChange={onChange}
-            required
-          />
+          <input name="organization" value={form.organization} onChange={onChange} required />
         </label>
 
         <label>
@@ -92,9 +87,7 @@ export default function Tributes() {
 
         <div style={{ display: "flex", gap: 8 }}>
           <button type="submit">Save Tribute</button>
-          <button type="button" onClick={() => navigate("/")}>
-            Cancel
-          </button>
+          <button type="button" onClick={() => navigate("/")}>Cancel</button>
         </div>
       </form>
     </main>
@@ -102,74 +95,7 @@ export default function Tributes() {
 }
 
 
-const styles = {
-  form: {
-    display: "grid",
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-    gap: 8,
-    margin: "8px 0 16px"
-  },
-  input: {
-    padding: "10px 12px",
-    border: "1px solid #ddd",
-    borderRadius: 8,
-    outline: "none"
-  },
-  textarea: {
-    gridColumn: "1 / -1",
-    padding: "10px 12px",
-    border: "1px solid #ddd",
-    borderRadius: 8,
-    outline: "none",
-    resize: "vertical"
-  },
-  button: {
-    gridColumn: "1 / -1",
-    padding: "10px 14px",
-    borderRadius: 10,
-    border: "1px solid #ddd",
-    background: "#fafafa",
-    cursor: "pointer",
-    fontWeight: 600
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-    gap: 12
-  },
-  card: {
-    border: "1px solid #eee",
-    borderRadius: 12,
-    overflow: "hidden",
-    background: "#fff",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-    cursor: "pointer"
-  },
-  muted: { margin: 0, color: "#666", fontSize: 14 },
-  backdrop: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.35)",
-    display: "grid",
-    placeItems: "center",
-    padding: 20
-  },
-  modal: {
-    width: "min(680px, 95vw)",
-    background: "#fff",
-    borderRadius: 12,
-    overflow: "hidden",
-    boxShadow: "0 10px 30px rgba(0,0,0,0.2)"
-  }
-};
-<button
-  onClick={() => {
-    // If you used a specific key, replace with that instead of clearing everything.
-    localStorage.clear();
-    window.location.reload();
-  }}
-  style={{ marginBottom: 12 }}
->
-  Reset demo data
-</button>
+
+
+
 

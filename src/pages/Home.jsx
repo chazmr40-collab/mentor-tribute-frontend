@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import { useEffect, useState } from "react";
 import sample from "../data/mentors.sample.json";
 import { loadItems, saveItems, clearItems, removeItem, exportItems } from "../store/itemsStore";
@@ -5,8 +6,7 @@ import { loadItems, saveItems, clearItems, removeItem, exportItems } from "../st
 export default function Home() {
   const [items, setItems] = useState(() => loadItems(sample));
 
-  useEffect(() => { saveItems(items); }, [items]);
-
+  // ✅ Keep this listener (store dispatches it)
   useEffect(() => {
     const onUpdated = () => setItems(loadItems(sample));
     window.addEventListener("mt-items-updated", onUpdated);
@@ -16,6 +16,7 @@ export default function Home() {
   function onReset() {
     if (confirm("Reset the demo list back to the sample data?")) {
       clearItems();
+      saveItems(sample);      // ✅ puts sample back into localStorage + notifies
       setItems(sample);
     }
   }
@@ -32,7 +33,7 @@ export default function Home() {
 
   function onDelete(id) {
     if (confirm("Delete this tribute?")) {
-      setItems(removeItem(id, sample));
+      setItems(removeItem(id, sample)); // removeItem saves + notifies
     }
   }
 
@@ -49,10 +50,15 @@ export default function Home() {
       <ul style={{ display: "grid", gap: 12, listStyle: "none", padding: 0 }}>
         {items.map((m) => (
           <li key={m.id} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <img src={m.photo} alt={m.name} width="72" height="72"
-                 style={{ borderRadius: 8, objectFit: "cover" }} />
+            <img
+              src={m.photo}
+              alt={m.name}
+              width="72"
+              height="72"
+              style={{ borderRadius: 8, objectFit: "cover" }}
+            />
             <div style={{ flex: 1 }}>
-              <strong>{m.name}</strong> — {m.role}, {m.organization} ({m.years})
+              <strong>{m.name}</strong> — {m.role}, {m.organization} {m.years ? `(${m.years})` : ""}
               <div style={{ fontStyle: "italic" }}>“{m.quote}”</div>
             </div>
             <button onClick={() => onDelete(m.id)}>Delete</button>
@@ -62,5 +68,6 @@ export default function Home() {
     </main>
   );
 }
+
 
 
